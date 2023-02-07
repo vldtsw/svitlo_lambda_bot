@@ -23,8 +23,6 @@ def lambda_handler(event, context):
         chat_id = data["message"]["chat"]["id"]
         first_name = data["message"]["chat"]["first_name"]
 
-        reply_markup = {}
-
         # Check if the message starts with the word "ping"
         if message.startswith("ping "):
             # Split the message into words and get the second word (the IP address and port)
@@ -41,18 +39,9 @@ def lambda_handler(event, context):
                     response = f"IP address is reachable (:\n" \
                                f"Status code: {resp.status_code}"
 
-                    reply_markup = {
-                        "inline_keyboard": [
-                            [
-                                {
-                                    "text": "Refresh status",
-                                    "callback_data": f"ping {ip_port}",
-                                }
-                            ]
-                        ]
-                    }
                 except Exception:
                     response = f"IP address is not reachable ):"
+
             except ValueError:
                 response = "Invalid <IP address>:<port>"
 
@@ -73,7 +62,6 @@ def lambda_handler(event, context):
         data = {
             "text": response.encode("utf8"),
             "chat_id": chat_id,
-            "reply_markup": json.dumps(reply_markup)
         }
         url = BASE_URL + "/sendMessage"
 
