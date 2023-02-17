@@ -13,6 +13,29 @@ TOKEN = os.environ["TELEGRAM_TOKEN"]
 BASE_URL = f"https://api.telegram.org/bot{TOKEN}"
 
 
+def send_response(response, chat_id, keyboard=None, message_id=None):
+    # Prepare the data to send to the Telegram API
+    data = {
+        "text": response.encode("utf8"),
+        "chat_id": chat_id,
+    }
+
+    # Add the inline keyboard to the data, if specified
+    if keyboard is not None:
+        data["reply_markup"] = json.dumps(keyboard)
+
+    # If a message ID is specified, use the editMessageText API method to update the message
+    if message_id is not None:
+        url = BASE_URL + "/editMessageText"
+        data["message_id"] = message_id
+    # Otherwise, use the sendMessage API method to send a new message
+    else:
+        url = BASE_URL + "/sendMessage"
+
+    # Send the data to the Telegram API
+    requests.post(url=url, data=data)
+
+
 def lambda_handler(event, context):
     try:
         # Load the request body as a JSON object
@@ -25,22 +48,15 @@ def lambda_handler(event, context):
             message_id = data["callback_query"]["message"]["message_id"]
 
             response = f"Callback data received {callback_data=}"
-            data = {
-                "text": response.encode("utf8"),
-                "chat_id": chat_id,
-                "message_id": message_id,
-            }
-
-            url = BASE_URL + "/editMessageText"
-
-            # Send the updated response back to the user
-            requests.post(url=url, data=data)
+            send_response(response=response, chat_id=chat_id, message_id=message_id)
 
         elif "message" in data:
             # Get the text of the message and the chat ID
             message = data["message"]["text"]
             chat_id = data["message"]["chat"]["id"]
             first_name = data["message"]["chat"]["first_name"]
+
+            keyboard = None
 
             # Check if the message starts with the word "ping"
             if message.startswith("ping "):
@@ -52,30 +68,30 @@ def lambda_handler(event, context):
                     ip = ip_port.split(":")[0]
                     ipaddress.ip_address(ip)
 
-                    keyboard = {
-                        "inline_keyboard": [
-                            [
-                                {
-                                    "text": "Update",
-                                    "callback_data": f"update {ip_port}"
-                                }
-                            ]
-                        ]
-                    }
-
                     # Try to make a head request to the URL using the IP address and port
                     try:
                         resp = requests.head(url=f"http://{ip_port}", timeout=5)
                         response = f"IP address is reachable (:\n" \
                                    f"Status code: {resp.status_code}"
+                        status = "up"
 
                     except Exception:
                         response = f"IP address is not reachable ):"
-                        keyboard = None
+                        status = "down"
+
+                    keyboard = {
+                        "inline_keyboard": [
+                            [
+                                {
+                                    "text": "Update",
+                                    "callback_data": f"{ip_port} {status}"
+                                }
+                            ]
+                        ]
+                    }
 
                 except ValueError:
                     response = "Invalid <IP address>:<port>"
-                    keyboard = None
 
             # If the message starts with "/start"
             elif message.startswith("/start"):
@@ -85,23 +101,12 @@ def lambda_handler(event, context):
                     f"Please, send me a message in the following format:\n"
                     f"ping <IP address>:<port>"
                 )
-                keyboard = None
 
             # If the message doesn't match either "ping" or "start"
             else:
                 response = "Send message in format 'ping <IP address>:<port>'"
-                keyboard = None
 
-            # Prepare the data to send to the Telegram API
-            data = {
-                "text": response.encode("utf8"),
-                "chat_id": chat_id,
-                "reply_markup": json.dumps(keyboard) if keyboard else None
-            }
-            url = BASE_URL + "/sendMessage"
-
-            # Send the response back to the user
-            requests.post(url=url, data=data)
+            send_response(response=response, chat_id=chat_id, keyboard=keyboard)
 
     except Exception as e:
         print(e)
