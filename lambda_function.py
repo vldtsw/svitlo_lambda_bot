@@ -38,7 +38,7 @@ def lambda_handler(event, context):
 
         elif "message" in data:
             # Get the text of the message and the chat ID
-            message = str(data["message"]["text"])
+            message = data["message"]["text"]
             chat_id = data["message"]["chat"]["id"]
             first_name = data["message"]["chat"]["first_name"]
 
