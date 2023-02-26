@@ -1,4 +1,18 @@
 This is a simple Python Telegram bot that checks the status of an IP address and port to help you determine if there is electricity in your home. The bot can be set up on AWS Lambda platform and uses webhooks to receive and respond to messages sent via Telegram - https://t.me/lambdatest_bot
+
+<img src="screenshots/Screenshot_1.jpg" width="250"/>
+
+<img src="screenshots/Screenshot_2.jpg" width="250"/>
+
+![Img1](screenshots/Screenshot_1.jpg)
+![Img1](screenshots/Screenshot_2.jpg)
+
+<img
+  src="screenshots_1.jpg"
+  alt="Alt text"
+  title="Optional title"
+  style="display: inline-block; margin: 0 auto; max-width: 300px">
+
 ### Usage
 To use the bot, you need to send a message in the following format:
 
