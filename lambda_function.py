@@ -28,8 +28,8 @@ def send_response(response, chat_id, keyboard=None, message_id=None):
     # If a message ID is specified, use the editMessageText API
     # method to update the message
     if message_id is not None:
-        url = BASE_URL + "/editMessageText"
         data["message_id"] = message_id
+        url = BASE_URL + "/editMessageText"
     # Otherwise, use the sendMessage API method to send a new message
     else:
         url = BASE_URL + "/sendMessage"
@@ -57,21 +57,19 @@ def handle_callback_query(data):
     chat_id = data["callback_query"]["message"]["chat"]["id"]
     message_id = data["callback_query"]["message"]["message_id"]
 
-    # if "up" in callback_data:
-    #     response = ""
-    # elif "down" in callback_data:
-    #     response = ""
-    # todo
+    response, keyboard = handle_ping_command(message=callback_data)
 
-    response = f"Callback data received {callback_data=}"
-    send_response(response=response, chat_id=chat_id, message_id=message_id)
+    send_response(
+        response=response, chat_id=chat_id, message_id=message_id, keyboard=keyboard
+    )
 
 
 def ping(ip_port):
     # Try to make a head request to the URL using the IP address and port
     try:
         resp = requests.head(url=f"http://{ip_port}", timeout=5)
-        response = f"IP address is reachable (:\n" f"Status code: {resp.status_code}"
+        response = f"IP address is reachable (:\n" \
+                   f"Status code: {resp.status_code}"
         status = "up"
 
     except Exception:
@@ -81,13 +79,22 @@ def ping(ip_port):
     return response, status
 
 
-def handle_ping_command(ip_port):
+def handle_ping_command(message):
+    # Split the message into words and get the second word
+    # (the IP address and port)
+    ip_port = message.split()[1]
     # Try to validate the IP address
     try:
         ip = ip_port.split(":")[0]
         ipaddress.ip_address(ip)
 
         response, status = ping(ip_port=ip_port)
+
+        # if "up " in message:
+        #     response = ""
+        # elif "down " in message:
+        #     response = ""
+        # todo: add responses "now reachable" and "became unreachable"
 
         keyboard = create_keyboard(ip_port=ip_port, status=status)
 
@@ -123,10 +130,7 @@ def handle_message(data):
 
     # Check if the message starts with the word "ping"
     if message.startswith("ping "):
-        # Split the message into words and get the second word
-        # (the IP address and port)
-        ip_port = message.split()[1]
-        response, keyboard = handle_ping_command(ip_port=ip_port)
+        response, keyboard = handle_ping_command(message=message)
 
     # If the message starts with "/start"
     elif message.startswith("/start"):
