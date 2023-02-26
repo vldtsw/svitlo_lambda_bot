@@ -67,8 +67,8 @@ def handle_callback_query(data):
 def ping(ip_port):
     # Try to make a head request to the URL using the IP address and port
     try:
-        resp = requests.head(url=f"http://{ip_port}", timeout=5)
-        response = f"IP address is reachable (:\n" \
+        resp = requests.head(url=f"http://{ip_port}", timeout=3)
+        response = f"IP address is reachable 💡\n" \
                    f"Status code: {resp.status_code}"
         status = "up"
 
