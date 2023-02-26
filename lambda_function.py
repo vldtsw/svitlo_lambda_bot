@@ -73,7 +73,7 @@ def ping(ip_port):
         status = "up"
 
     except Exception:
-        response = "IP address is not reachable ):"
+        response = "IP address is not reachable ⬛"
         status = "down"
 
     return response, status
